@@ -1,0 +1,98 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+
+<!--
+`<jwt-authentication>` authenticates the user on a ReST backend and exposes the returned token.
+
+In typical use, just put `<jwt-authentication>` inside your element and call it's login method:
+
+  `<jwt-authentication url="http://yourapi/authentication/" 
+                      username="username" 
+                      password="password" 
+                      on-success="handleResponse"
+                      on-error="handleError">
+  </jwt-authentication>`
+-->
+<dom-module id="jwt-authentication">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+    </style>
+
+    <iron-ajax id="ajax"
+               url="{{url}}"
+               body='{"username": "{{username}}","password": "{{password}}"}'
+               headers='{"Accept": "application/json", "Content-Type": "application/json"}'
+               method="POST"
+               handle-as="json"
+               on-response="_handleResponse"
+               on-error="_handleError"
+               debounce-duration="300">
+    </iron-ajax>
+
+  </template>
+
+  <script>
+    (function () {
+      'use strict';
+
+      Polymer({
+        is: 'jwt-authentication',
+
+        properties: {
+
+          /**
+           *The url to the ReST authentication api.
+           */
+          url: {
+            type: String
+          },
+
+          /**
+           *The username for authentication.
+           */
+          username: {
+            type: String
+          },
+
+          /**
+           *The password for authentication.
+           */
+          password: {
+            type: String
+          }
+
+        },
+
+        /**
+         *Executes the login and fires a 'success' event if everything is ok.
+         *Otherwise fires a 'error' event.
+         */
+        login: function() {
+          this.$.ajax.generateRequest();
+        },
+
+        /**
+         * Fired when the login was successfull.
+         *
+         * @event success
+         * @param {data} token brand new created token.
+         */
+        _handleResponse: function (data) {
+          this.fire('success', {
+            token: data.detail.response.token
+          });
+        },
+
+        _handleError: function (error) {
+          this.fire('error', {
+            response: error.detail.request.xhr.response
+          });
+        }
+
+      });
+    })();
+  </script>
+</dom-module>
